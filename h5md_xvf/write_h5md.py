@@ -23,16 +23,16 @@ with pyh5md.File('H5MD.h5', 'w', author='Edis') as f:
     atoms_n_atoms = pyh5md.element(atoms, 'n_atoms', store='fixed', data=u.atoms.n_atoms)
     
     # Define edges to be 3x3 matrix which means the unit cell is triclinic
-    edges = u.trajectory.ts.triclinic_dimensions
     # Create the box
     atoms.create_box(dimension=3, boundary=['periodic', 'periodic', 'periodic'], store='time',
-                     data=edges, step_from=atoms_positions)
+                    data=u.trajectory.ts.triclinic_dimensions, step_from=atoms_positions)
     
-    # Append the data to the H5MD file. The append 
+    # Append the data to the H5MD file
     for ts in u.trajectory: 
-        atoms.box.edges.append(edges, ts.frame, time=ts.time)
+        atoms.box.edges.append(u.trajectory.ts.triclinic_dimensions, ts.frame, time=ts.time)
         atoms_positions.append(u.atoms.positions, ts.frame, time=ts.time)
         atoms_velocities.append(u.atoms.velocities, ts.frame, time=ts.time)
         atoms_forces.append(u.atoms.forces, ts.frame, time=ts.time)
         atoms_masses.append(u.atoms.masses, ts.frame, time=ts.time)
         atoms_n_atoms.append(u.atoms.n_atoms, ts.frame, time=ts.time)
+   
