@@ -6,7 +6,7 @@ from MDAnalysis.tests.datafiles import TPR_xvf, TRR_xvf
 u = mda.Universe(TPR_xvf, TRR_xvf)
 
 # Open a H5MD file to write
-with pyh5md.File('H5MD.h5', 'w', author='Edis') as f:
+with pyh5md.File('H5MD_xvf.h5', 'w', author='Edis') as f:
    
     # Add a trajectory group
     atoms = f.particles_group('atoms')
