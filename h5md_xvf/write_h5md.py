@@ -1,4 +1,3 @@
-import numpy as np
 import pyh5md
 import MDAnalysis as mda
 from MDAnalysis.tests.datafiles import TPR_xvf, TRR_xvf
@@ -6,33 +5,33 @@ from MDAnalysis.tests.datafiles import TPR_xvf, TRR_xvf
 u = mda.Universe(TPR_xvf, TRR_xvf)
 
 # Open a H5MD file to write
-with pyh5md.File('H5MD_xvf.h5', 'w', author='Edis') as f:
-   
-    # Add a trajectory group
-    atoms = f.particles_group('atoms')
+with pyh5md.File('cobrotoxin.h5md', 'w', creator='write_h5md.py') as f:
 
-    ts = u.trajectory.ts
-    
-    # Add the position data element in the trajectory group
-    atoms_positions = pyh5md.element(atoms,'positions', store='time', data=u.atoms.positions, time=True)
-    atoms_velocities = pyh5md.element(atoms, 'velocities', data=u.atoms.velocities, step_from=atoms_positions, 
+    # Add a trajectory group into particles group
+    trajectory = f.particles_group('trajectory')
+
+    # Add the positions, velocities, forces, masses, n_atoms groups into the trajectory group
+    trajectory_positions = pyh5md.element(trajectory,'positions', store='time', data=u.trajectory.ts.positions, time=True)
+    trajectory_velocities = pyh5md.element(trajectory, 'velocities', data=u.trajectory.ts.velocities, step_from=trajectory_positions,
                                       store='time', time=True)
-    atoms_forces = pyh5md.element(atoms, 'forces', data=u.atoms.forces, step_from=atoms_positions, 
+    trajectory_forces = pyh5md.element(trajectory, 'forces', data=u.trajectory.ts.forces, step_from=trajectory_positions,
                                   store='time', time=True)
-    atoms_masses = pyh5md.element(atoms, 'masses', store='fixed', data=u.atoms.masses)
-    atoms_n_atoms = pyh5md.element(atoms, 'n_atoms', store='fixed', data=u.atoms.n_atoms)
+    trajectory_n_atoms = pyh5md.element(trajectory, 'n_atoms', store='fixed', data=u.atoms.n_atoms)
+    data_step = pyh5md.element(trajectory, 'data/step', store='time', data=u.trajectory.ts.data['step'])
+    data_lambda = pyh5md.element(trajectory, 'data/lambda', store='time', data=u.trajectory.ts.data['lambda'])
+    data_dt = pyh5md.element(trajectory, 'data/dt', store='time', data=u.trajectory.ts.data['dt'])
     
-    # Define edges to be 3x3 matrix which means the unit cell is triclinic
-    # Create the box
-    atoms.create_box(dimension=3, boundary=['periodic', 'periodic', 'periodic'], store='time',
-                    data=u.trajectory.ts.triclinic_dimensions, step_from=atoms_positions)
-    
-    # Append the data to the H5MD file
-    for ts in u.trajectory: 
-        atoms.box.edges.append(u.trajectory.ts.triclinic_dimensions, ts.frame, time=ts.time)
-        atoms_positions.append(u.atoms.positions, ts.frame, time=ts.time)
-        atoms_velocities.append(u.atoms.velocities, ts.frame, time=ts.time)
-        atoms_forces.append(u.atoms.forces, ts.frame, time=ts.time)
-        atoms_masses.append(u.atoms.masses, ts.frame, time=ts.time)
-        atoms_n_atoms.append(u.atoms.n_atoms, ts.frame, time=ts.time)
-   
+    # Data entry is 3x3 matrix which means unitcell is triclinic
+    trajectory.create_box(dimension=3, boundary=['periodic', 'periodic', 'periodic'], store='time',
+                    data=u.trajectory.ts.triclinic_dimensions, step_from=trajectory_positions)
+
+    # Append the value, step, and time datasets
+    for ts in u.trajectory:
+        trajectory.box.edges.append(u.trajectory.ts.triclinic_dimensions, ts.frame, time=ts.time)
+        trajectory_positions.append(u.trajectory.ts.positions, ts.frame, time=ts.time)
+        trajectory_velocities.append(u.trajectory.ts.velocities, ts.frame, time=ts.time)
+        trajectory_forces.append(u.trajectory.ts.forces, ts.frame, time=ts.time)
+        data_step.append(u.trajectory.ts.data['step'], ts.frame, time=ts.time)
+        data_lambda.append(u.trajectory.ts.data['lambda'], ts.frame, time=ts.time)
+        data_dt.append(u.trajectory.ts.data['dt'], ts.frame, time=ts.time)
+        

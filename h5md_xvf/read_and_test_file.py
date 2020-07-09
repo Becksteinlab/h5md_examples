@@ -7,17 +7,16 @@ from MDAnalysis.tests.datafiles import TPR_xvf, TRR_xvf
 u = mda.Universe(TPR_xvf, TRR_xvf)
 
 # open h5 file:
-f = pyh5md.File('H5MD.h5', 'r')
+f = pyh5md.File('cobrotoxin.h5md', 'r')
 # extract particles group
-atoms = f.particles_group('atoms')
+atoms = f.particles_group('trajectory')
 
 # extract datasets from .h5 file with pyh5md.element function 
 box = pyh5md.element(atoms['box'], 'edges').value[:]
 positions = pyh5md.element(atoms, 'positions').value[:]
 velocities = pyh5md.element(atoms, 'velocities').value[:]
 forces = pyh5md.element(atoms, 'forces').value[:]
-masses = pyh5md.element(atoms, 'masses').value
-n_atoms = pyh5md.element(atoms, 'n_atoms').value
+n_atoms = pyh5md.element(atoms, 'n_atoms').value[()]
 
 
 
@@ -38,14 +37,9 @@ print('Forces test (True=Pass False=Fail):')
 for ts, x in zip(u.trajectory, forces):
     print('Timestep', u.trajectory.ts.frame, np.allclose(u.atoms.forces, x))
     
-print('Masses test:')
-if np.allclose(u.atoms.masses, masses[()]) == True:
-    print('Pass')
-else:
-    print('Fail')
 
 print('N_atoms test:')
-if u.atoms.n_atoms == n_atoms[()]:
+if u.atoms.n_atoms == n_atoms:
     print('Pass')
 else:
     print('Fail')
