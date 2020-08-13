@@ -4,8 +4,38 @@ import time
 
 
 
-def benchmark_rmsd(u):
-    """Benchmarks rmsd calculation for a given universe"""
+def benchmark_rmsd(u, vs=False):
+    """Benchmarks rmsd calculation for a given universe
+
+    If vs=True, will benchmark whole position array instead of
+    only alpha carbons (used to benchmark vs pyh5md)."""
+
+    if vs:
+        x_ref = u.trajectory.ts.positions.copy()
+
+        total_io = 0
+        total_rmsd = 0
+        total_loop = -time.time()
+        for i in range(len(u.trajectory)):
+
+            start_io = time.time()
+            ts = u.trajectory[i]
+            total_io += time.time() - start_io
+
+            start_rmsd = time.time()
+            result = rmsd(u.trajectory.ts.positions, x_ref, superposition=True)
+            total_rmsd += time.time() - start_rmsd
+
+        total_loop += time.time()
+
+        return {"Loop": total_loop,
+                "Loop_per_frame": (total_loop/u.trajectory.n_frames),
+                "I/O": total_io,
+                "I/O_per_frame": (total_io/u.trajectory.n_frames),
+                "RMSD": total_rmsd,
+                "RMSD_per_frame": (total_rmsd/u.trajectory.n_frames),
+                "Overhead": (total_loop - (total_io + total_rmsd)),
+                "Overhead_per_frame": ((total_loop - (total_io + total_rmsd))/u.trajectory.n_frames)}
 
     CA = u.select_atoms("protein and name CA")
     x_ref = CA.positions.copy()
@@ -35,7 +65,7 @@ def benchmark_rmsd(u):
             "Overhead_per_frame": ((total_loop - (total_io + total_rmsd))/u.trajectory.n_frames)}
 
 
-def benchmark_rmsd_n_times(u, n):
+def benchmark_rmsd_n_times(u, n, vs=False):
     """benchmark a universe 'u' n times"""
 
     loop_time = []
@@ -48,7 +78,7 @@ def benchmark_rmsd_n_times(u, n):
     overhead_time_per_frame = []
 
     for i in range(n):
-        total_times = benchmark_rmsd(u)
+        total_times = benchmark_rmsd(u, vs)
         loop_time.append(total_times["Loop"])
         loop_time_per_frame.append(total_times["Loop_per_frame"])
         io_time.append(total_times["I/O"])
@@ -73,17 +103,18 @@ import pyh5md
 def benchmark_pyh5md_rmsd(filename):
     with pyh5md.File(filename, 'r') as f:
 
-        x_ref = f['particles/trajectory/position/value'][0].copy()
-        n_frames = f['particles/trajectory/position/value'].shape[0]
+        trajectory = f.particles_group('trajectory')
+        pos = pyh5md.element(trajectory, 'position').value[0]
+        x_ref = pos.copy()
+        n_frames = pyh5md.element(trajectory, 'position').value.shape[0]
 
         total_io = 0
         total_rmsd = 0
         total_loop = -time.time()
         for frame in range(n_frames):
-            x_ref = f['particles/trajectory/position/value'][0].copy()
 
             start_io = time.time()
-            positions = f['particles/trajectory/position/value'][frame]
+            positions = pyh5md.element(trajectory, 'position').value[frame]
             total_io += time.time() - start_io
 
             start_rmsd = time.time()
