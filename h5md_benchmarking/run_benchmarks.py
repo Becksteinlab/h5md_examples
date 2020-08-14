@@ -6,27 +6,32 @@ import os
 
 print("What do you want to call the directory where figures will be saved?")
 loc = str(input())
-os.mkdir("figures/"+loc)
+try:
+    os.mkdir("figures/"+loc)
+except OSError:
+    print ("Creation of the directory failed")
+else:
+    print ("{} directory successfully created in /figures".format(loc))
 
 print("Which cobrotoxin size do you want to benchmark?"+"\n"+
       "(options are '', '100x', or '1000x')")
 size = str(input())
 
 # benchmark different file formats with MDAnalysis
-u_DCD = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".dcd")
+u_DCD = mda.Universe("testfiles/cobrotoxin.tpr", "testfiles/cobrotoxin"+size+".dcd")
 DCDdict = benchmark_mda_rmsd_n_times(u_DCD, 5)
 
-u_TRR = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".trr")
+u_TRR = mda.Universe("testfiles/cobrotoxin.tpr", "testfiles/cobrotoxin"+size+".trr")
 TRRdict = benchmark_mda_rmsd_n_times(u_TRR, 5)
 
-u_XTC = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".xtc")
+u_XTC = mda.Universe("testfiles/cobrotoxin.tpr", "testfiles/cobrotoxin"+size+".xtc")
 XTCdict = benchmark_mda_rmsd_n_times(u_XTC, 5)
 
-u_H5MD = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".h5md")
+u_H5MD = mda.Universe("testfiles/cobrotoxin.tpr", "testfiles/cobrotoxin"+size+".h5md")
 H5MDdict = benchmark_mda_rmsd_n_times(u_H5MD, 5)
 
 # benchmark pyh5md
-PYH5MDdict = benchmark_pyh5md_rmsd_n_times("cobrotoxin"+size+".h5md", 5)
+PYH5MDdict = benchmark_pyh5md_rmsd_n_times("testfiles/cobrotoxin"+size+".h5md", 5)
 
 
 Loop_means = [np.mean(DCDdict["Loop"]),
@@ -192,3 +197,5 @@ ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
 plt.savefig("figures/"+loc+"/rmsd_per_frame_bench.png")
+
+print("Benchmarking complete. Figures saved in /figures/{}".format(loc))
