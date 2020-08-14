@@ -2,23 +2,31 @@ import MDAnalysis as mda
 from benchmark import benchmark_mda_rmsd_n_times, benchmark_pyh5md_rmsd_n_times
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
+print("What do you want to call the directory where figures will be saved?")
+loc = str(input())
+os.mkdir("figures/"+loc)
+
+print("Which cobrotoxin size do you want to benchmark?"+"\n"+
+      "(options are '', '100x', or '1000x')")
+size = str(input())
 
 # benchmark different file formats with MDAnalysis
-u_DCD = mda.Universe("cobrotoxin.tpr", "cobrotoxin1000x.dcd")
+u_DCD = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".dcd")
 DCDdict = benchmark_mda_rmsd_n_times(u_DCD, 5)
 
-u_TRR = mda.Universe("cobrotoxin.tpr", "cobrotoxin1000x.trr")
+u_TRR = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".trr")
 TRRdict = benchmark_mda_rmsd_n_times(u_TRR, 5)
 
-u_XTC = mda.Universe("cobrotoxin.tpr", "cobrotoxin1000x.xtc")
+u_XTC = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".xtc")
 XTCdict = benchmark_mda_rmsd_n_times(u_XTC, 5)
 
-u_H5MD = mda.Universe("cobrotoxin.tpr", "cobrotoxin1000x.h5md")
+u_H5MD = mda.Universe("cobrotoxin.tpr", "cobrotoxin"+size+".h5md")
 H5MDdict = benchmark_mda_rmsd_n_times(u_H5MD, 5)
 
 # benchmark pyh5md
-PYH5MDdict = benchmark_pyh5md_rmsd_n_times("cobrotoxin1000x.h5md", 5)
+PYH5MDdict = benchmark_pyh5md_rmsd_n_times("cobrotoxin"+size+".h5md", 5)
 
 
 Loop_means = [np.mean(DCDdict["Loop"]),
@@ -105,7 +113,7 @@ csv_list = [
            ]
 
 import csv
-with open('data.csv', 'w', newline='') as f:
+with open("figures/"+loc+"/data.csv", 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(csv_list)
 
@@ -123,7 +131,7 @@ ax.set_title("Benchmark Loop Total Time")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/Loop_bench.png")
+plt.savefig("figures/"+loc+"/Loop_bench.png")
 
 # TOTAL LOOP/FRAME
 fig, ax = plt.subplots()
@@ -135,7 +143,7 @@ ax.set_title("Benchmark Loop Time per Frame")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/Loop_per_frame_bench.png")
+plt.savefig("figures/"+loc+"/Loop_per_frame_bench.png")
 
 # IO
 fig, ax = plt.subplots()
@@ -147,7 +155,7 @@ ax.set_title("I/O Total Time")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/IO_bench.png")
+plt.savefig("figures/"+loc+"/IO_bench.png")
 
 # IO/FRAME
 fig, ax = plt.subplots()
@@ -159,7 +167,7 @@ ax.set_title("I/O Time per Frame")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/IO_per_frame_bench.png")
+plt.savefig("figures/"+loc+"/IO_per_frame_bench.png")
 
 # RMSD
 fig, ax = plt.subplots()
@@ -171,7 +179,7 @@ ax.set_title("RMSD Computation Total Time")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/rmsd_bench.png")
+plt.savefig("figures/"+loc+"/rmsd_bench.png")
 
 # RMSD/FRAME
 fig, ax = plt.subplots()
@@ -183,4 +191,4 @@ ax.set_title("RMSD Computation Time per Frame")
 ax.set_xlabel("File Formats")
 ax.set_ylabel("Time (s)")
 plt.tight_layout()
-plt.savefig("figures/rmsd_per_frame_bench.png")
+plt.savefig("figures/"+loc+"/rmsd_per_frame_bench.png")
