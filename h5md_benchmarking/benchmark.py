@@ -73,7 +73,7 @@ import pyh5md
 def benchmark_pyh5md_rmsd(filename):
     with pyh5md.File(filename, 'r') as f:
 
-        u = mda.Universe("cobrotoxin.tpr", filename)
+        u = mda.Universe("testfiles/cobrotoxin.tpr", filename)
         indices = u.select_atoms("protein and name CA").indices
 
         trajectory = f.particles_group('trajectory')
