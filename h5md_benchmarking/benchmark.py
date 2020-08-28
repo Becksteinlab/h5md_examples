@@ -77,6 +77,8 @@ def benchmark_pyh5md_rmsd(filename):
         indices = u.select_atoms("protein and name CA").indices
 
         trajectory = f.particles_group('trajectory')
+        observables = f.require_group('observables')
+
         pos0 = pyh5md.element(trajectory, 'position').value[0, indices, :]
         x_ref = pos0.copy()
         n_frames = pyh5md.element(trajectory, 'position').value.shape[0]
@@ -87,7 +89,13 @@ def benchmark_pyh5md_rmsd(filename):
         for frame in range(n_frames):
 
             start_io = time.time()
-            positions = pyh5md.element(trajectory, 'position').value[frame, indices, :]
+            positions = pyh5md.element(trajectory, 'position').value[frame, indices]
+            velocities = pyh5md.element(trajectory, 'velocity').value[frame, indices]
+            forces = pyh5md.element(trajectory, 'force').value[frame, indices]
+            box = pyh5md.element(trajectory, 'box/edges').value[frame]
+            data_step = pyh5md.element(observables, 'step').value[frame]
+            data_lambda = pyh5md.element(observables, 'lambda').value[frame]
+            data_time = pyh5md.element(trajectory, 'position').time[frame]
             total_io += time.time() - start_io
 
             start_rmsd = time.time()
